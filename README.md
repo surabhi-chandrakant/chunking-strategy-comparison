@@ -254,29 +254,105 @@ Use Groq Embeddings
 # 🏗️ Project Architecture
 
 ```text
-app.py
+chunking-strategy-comparison/
 │
-├── Config
+├── .git/                          # Git version control (hidden)
+├── venv/                          # Python virtual environment (hidden)
 │
-├── GroqService
-│
-├── DocumentProcessor
-│
-├── ChunkingManager
-│
-├── Chunking Strategies
-│   ├── FixedSizeChunking
-│   ├── SentenceBasedChunking
-│   └── SemanticChunking
-│
-├── RetrievalEvaluator
-│
-└── Streamlit UI
-    ├── Sidebar
-    ├── Documents Tab
-    ├── Chunking Tab
-    ├── Evaluation Tab
-    └── Analytics Tab
+├── .gitignore                     # Git ignore rules
+├── app.py                         # Main application (37 KB)
+├── requirements.txt               # Python dependencies
+└── README.md                      # Project documentation
+```
+---
+# Architecture Diagram
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                    STREAMLIT WEB APPLICATION                    │
+│                        (app.py - 37 KB)                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │
+│  │   UI Layer   │  │  Config      │  │  Session State       │ │
+│  │  (Streamlit) │  │  (dataclass) │  │  (st.session_state)  │ │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘ │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                     CORE LOGIC LAYER                     │  │
+│  ├──────────────────────────────────────────────────────────┤  │
+│  │                                                         │  │
+│  │  ┌───────────────────────────────────────────────────┐  │  │
+│  │  │         GROQ SERVICE (Optional API)              │  │  │
+│  │  │  - GroqService class                             │  │  │
+│  │  │  - Generate embeddings via Groq                  │  │  │
+│  │  │  - Model: llama-3.3-70b-versatile               │  │  │
+│  │  └───────────────────────────────────────────────────┘  │  │
+│  │                                                         │  │
+│  │  ┌───────────────────────────────────────────────────┐  │  │
+│  │  │      DOCUMENT PROCESSOR                          │  │  │
+│  │  │  - Document management                           │  │  │
+│  │  │  - Store/retrieve documents                      │  │  │
+│  │  │  - Groq integration                              │  │  │
+│  │  └───────────────────────────────────────────────────┘  │  │
+│  │                                                         │  │
+│  │  ┌───────────────────────────────────────────────────┐  │  │
+│  │  │      CHUNKING MANAGER                           │  │  │
+│  │  │  - Strategy registry                            │  │  │
+│  │  │  - Process documents                            │  │  │
+│  │  │  - Cache results                                │  │  │
+│  │  └───────────────────────────────────────────────────┘  │  │
+│  │                                                         │  │
+│  │  ┌───────────────────────────────────────────────────┐  │  │
+│  │  │      CHUNKING STRATEGIES                        │  │  │
+│  │  │  ┌──────────────┐ ┌──────────────┐ ┌──────────┐ │  │  │
+│  │  │  │  Fixed Size  │ │  Sentence    │ │ Semantic │ │  │  │
+│  │  │  │  Chunking    │ │  Based       │ │ Chunking │ │  │  │
+│  │  │  └──────────────┘ └──────────────┘ └──────────┘ │  │  │
+│  │  └───────────────────────────────────────────────────┘  │  │
+│  │                                                         │  │
+│  │  ┌───────────────────────────────────────────────────┐  │  │
+│  │  │      RETRIEVAL EVALUATOR                         │  │  │
+│  │  │  - TF-IDF Vectorization                          │  │  │
+│  │  │  - Cosine similarity                             │  │  │
+│  │  │  - Precision/Recall/Relevance                    │  │  │
+│  │  └───────────────────────────────────────────────────┘  │  │
+│  │                                                         │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                   UI TABS (4 Views)                     │  │
+│  ├──────────────────────────────────────────────────────────┤  │
+│  │                                                         │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌───────────────┐  │  │
+│  │  │   TAB 1     │  │   TAB 2     │  │   TAB 3       │  │  │
+│  │  │  Documents  │  │  Chunking   │  │  Evaluation   │  │  │
+│  │  │  - Add docs │  │  - Process  │  │  - Query      │  │  │
+│  │  │  - View     │  │  - View     │  │  - Metrics    │  │  │
+│  │  │  - Manage   │  │  - Stats    │  │  - History    │  │  │
+│  │  └─────────────┘  └─────────────┘  └───────────────┘  │  │
+│  │                                                         │  │
+│  │  ┌─────────────┐                                       │  │
+│  │  │   TAB 4     │                                       │  │
+│  │  │  Analytics  │                                       │  │
+│  │  │  - Charts   │                                       │  │
+│  │  │  - Compare  │                                       │  │
+│  │  │  - Stats   │                                       │  │
+│  │  └─────────────┘                                       │  │
+│  │                                                         │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              SIDEBAR NAVIGATION                         │  │
+│  ├──────────────────────────────────────────────────────────┤  │
+│  │  - Groq API Configuration                               │  │
+│  │  - Parameters (Size, Overlap, Threshold)                │  │
+│  │  - Strategy Selection                                   │  │
+│  │  - Document Actions (Load/Clear)                        │  │
+│  │  - Status Dashboard                                      │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
