@@ -7,6 +7,8 @@ A production-ready interactive tool for comparing chunking strategies and evalua
 ![Groq](https://img.shields.io/badge/Groq-000000?style=for-the-badge\&logo=groq\&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
+Live app : https://chunking-strategy-comparison-with-groq.streamlit.app/ 
+
 ## 🎯 What is This Tool?
 
 This tool helps you understand and compare different **text chunking strategies** — a critical component in building Retrieval-Augmented Generation (RAG) systems, document search, and AI applications.
